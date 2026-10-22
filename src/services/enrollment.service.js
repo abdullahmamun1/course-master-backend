@@ -32,8 +32,9 @@ const getMyEnrollments = async (studentId) => {
     .sort({ createdAt: -1 });
 };
 
-const completeLesson = async (enrollId, lessonId) => {
-  const enrollment = await Enrollment.findById(enrollId);
+const completeLesson = async (studentId, enrollId, lessonId) => {
+  // only the enrolled student can update their own progress
+  const enrollment = await Enrollment.findOne({ _id: enrollId, student: studentId });
   if (!enrollment) throw new Error("Enrollment not found");
 
   // avoid duplicates
