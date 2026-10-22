@@ -5,6 +5,11 @@ const enrollCourse = async (studentId, courseId, batchId = null) => {
   const course = await Course.findById(courseId);
   if (!course) throw new Error("Course not found");
 
+  // batch is optional, but if given it must belong to this course
+  if (batchId && !course.batches.some((b) => String(b._id) === String(batchId))) {
+    throw new Error("Invalid batch for this course");
+  }
+
   // Check if already enrolled
   let enrollment = await Enrollment.findOne({
     student: studentId,
