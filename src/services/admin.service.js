@@ -3,6 +3,7 @@
 const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const AssignmentSubmission = require("../models/AssignmentSubmission");
+const QuizSubmission = require("../models/QuizSubmission");
 const User = require("../models/User");
 
 const createCourse = async (payload) => {
@@ -19,6 +20,14 @@ const updateCourse = async (id, payload) => {
 const deleteCourse = async (id) => {
   const course = await Course.findByIdAndDelete(id);
   if (!course) throw new Error("Course not found");
+
+  // remove records that reference the deleted course
+  await Promise.all([
+    Enrollment.deleteMany({ course: id }),
+    QuizSubmission.deleteMany({ course: id }),
+    AssignmentSubmission.deleteMany({ course: id }),
+  ]);
+
   return { message: "Course deleted" };
 };
 
