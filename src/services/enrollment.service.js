@@ -37,6 +37,17 @@ const completeLesson = async (studentId, enrollId, lessonId) => {
   const enrollment = await Enrollment.findOne({ _id: enrollId, student: studentId });
   if (!enrollment) throw new Error("Enrollment not found");
 
+  const course = await Course.findById(enrollment.course);
+  if (!course) throw new Error("Course not found");
+
+  // lesson must belong to this course
+  const courseLessonIds = course.syllabus.flatMap((mod) =>
+    mod.lessons.map((lesson) => String(lesson._id))
+  );
+  if (!courseLessonIds.includes(String(lessonId))) {
+    throw new Error("Lesson not found in this course");
+  }
+
   // avoid duplicates
   const alreadyDone = enrollment.progress.completedLessons
     .map(String)
@@ -46,14 +57,11 @@ const completeLesson = async (studentId, enrollId, lessonId) => {
     enrollment.progress.completedLessons.push(lessonId);
   }
 
-  // calculate percent
-  const course = await Course.findById(enrollment.course);
-  const totalLessons = course.syllabus.reduce(
-    (sum, mod) => sum + mod.lessons.length,
-    0
-  );
-
-  const completed = enrollment.progress.completedLessons.length;
+  // calculate percent (only count lessons that still exist in the course)
+  const totalLessons = courseLessonIds.length;
+  const completed = enrollment.progress.completedLessons.filter((id) =>
+    courseLessonIds.includes(String(id))
+  ).length;
   enrollment.progress.percent =
     totalLessons === 0 ? 0 : Math.round((completed / totalLessons) * 100);
 
