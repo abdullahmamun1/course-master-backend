@@ -20,6 +20,15 @@ const transporter = nodemailer.createTransport({
 //   }
 // });
 
+// escape user-provided text before inserting it into email HTML
+const escapeHtml = (value = "") =>
+    String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
 const sendWelcomeEmail = async (userEmail, userName) => {
     // Don't send email if email service is not configured
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
@@ -47,7 +56,7 @@ const sendWelcomeEmail = async (userEmail, userName) => {
           </div>
           
           <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
-            <p style="font-size: 16px; margin-top: 0;">Hi <strong>${userName}</strong>,</p>
+            <p style="font-size: 16px; margin-top: 0;">Hi <strong>${escapeHtml(userName)}</strong>,</p>
             
             <p style="font-size: 16px;">
               Thank you for joining CourseMaster! We're thrilled to have you on board and excited to be part of your learning journey.
