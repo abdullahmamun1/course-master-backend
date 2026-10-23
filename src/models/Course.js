@@ -11,9 +11,26 @@ const lessonSchema = new Schema(
     assignmentPrompt: { type: String },
     quiz: [
       {
-        question: String,
-        options: [String],
-        correctIndex: Number,
+        question: { type: String, required: [true, "Quiz question is required"], trim: true },
+        options: {
+          type: [{ type: String, trim: true }],
+          validate: {
+            validator: (opts) => opts.length >= 2 && opts.every((o) => o && o.length > 0),
+            message: "Quiz needs at least 2 options and none can be empty",
+          },
+        },
+        correctIndex: {
+          type: Number,
+          required: [true, "Correct answer is required"],
+          min: [0, "Correct answer must be one of the options"],
+          validate: {
+            validator: function (idx) {
+              // `this` is the quiz item on save; skip on query updates where it's not available
+              return !Array.isArray(this?.options) || idx < this.options.length;
+            },
+            message: "Correct answer must be one of the options",
+          },
+        },
       },
     ],
   },
