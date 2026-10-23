@@ -101,11 +101,17 @@ const reviewAssignment = async (id, payload, adminId) => {
   return submission;
 };
 
+// "YYYY-MM-DD" in server-local time; used for BOTH grouping and chart bars so the keys always match
+// (toISOString() is UTC and shifts dates by a day in non-UTC timezones)
+const localDateKey = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 // Get analytics data for dashboard
 const getAnalytics = async () => {
   // Get enrollments grouped by date (last 30 days)
+  // window = today + the 29 days before it, matching the 30 bars in chartData
   const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
   thirtyDaysAgo.setHours(0, 0, 0, 0);
 
   const enrollments = await Enrollment.find({
@@ -115,7 +121,7 @@ const getAnalytics = async () => {
   // Group by date
   const enrollmentData = {};
   enrollments.forEach(enrollment => {
-    const date = enrollment.createdAt.toISOString().split('T')[0];
+    const date = localDateKey(enrollment.createdAt);
     enrollmentData[date] = (enrollmentData[date] || 0) + 1;
   });
 
@@ -125,7 +131,7 @@ const getAnalytics = async () => {
     const date = new Date();
     date.setDate(date.getDate() - i);
     date.setHours(0, 0, 0, 0);
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = localDateKey(date);
 
     // Format date for display (e.g., "Jan 15")
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
