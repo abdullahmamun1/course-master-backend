@@ -16,7 +16,9 @@ const updateCourse = async (req, res) => {
     const course = await adminService.updateCourse(req.params.id, req.body);
     res.json(course);
   } catch (err) {
-    res.status(404).json({ message: err.message });
+    // 404 only when the course is missing; validation/cast errors are bad input
+    const status = err.message === "Course not found" ? 404 : 400;
+    res.status(status).json({ message: err.message });
   }
 };
 

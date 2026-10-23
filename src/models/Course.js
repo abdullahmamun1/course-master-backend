@@ -30,10 +30,10 @@ const moduleSchema = new Schema(
 
 const courseSchema = new Schema(
   {
-    title: { type: String, required: true, index: true },
-    description: { type: String, required: true },
-    instructorName: { type: String, required: true, index: true },
-    price: { type: Number, required: true },
+    title: { type: String, required: true, trim: true, index: true },
+    description: { type: String, required: true, trim: true },
+    instructorName: { type: String, required: true, trim: true, index: true },
+    price: { type: Number, required: true, min: [0, "Price cannot be negative"] },
     category: { type: String, index: true },
     tags: [{ type: String, index: true }],
     syllabus: [moduleSchema],

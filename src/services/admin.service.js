@@ -12,7 +12,7 @@ const createCourse = async (payload) => {
 };
 
 const updateCourse = async (id, payload) => {
-  const course = await Course.findByIdAndUpdate(id, payload, { new: true });
+  const course = await Course.findByIdAndUpdate(id, payload, { new: true, runValidators: true });
   if (!course) throw new Error("Course not found");
   return course;
 };
