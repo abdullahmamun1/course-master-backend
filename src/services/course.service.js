@@ -2,7 +2,10 @@
 
 const Course = require("../models/Course");
 
-const getCourses = async (query) => {
+// quiz answer keys are never sent to students/guests; grading happens server-side
+const HIDE_QUIZ_ANSWERS = "-syllabus.lessons.quiz.correctIndex";
+
+const getCourses = async (query, includeAnswers = false) => {
   const {
     page = 1,
     limit = 8,
@@ -44,6 +47,7 @@ const getCourses = async (query) => {
 
   const [courses, total] = await Promise.all([
     Course.find(filter)
+      .select(includeAnswers ? "" : HIDE_QUIZ_ANSWERS)
       .sort(sortObj)
       .skip(skip)
       .limit(limitNum),
@@ -58,8 +62,10 @@ const getCourses = async (query) => {
   };
 };
 
-const getCourseById = async (id) => {
-  const course = await Course.findById(id);
+const getCourseById = async (id, includeAnswers = false) => {
+  const query = Course.findById(id);
+  if (!includeAnswers) query.select(HIDE_QUIZ_ANSWERS);
+  const course = await query;
   if (!course) throw new Error("Course not found");
   return course;
 };

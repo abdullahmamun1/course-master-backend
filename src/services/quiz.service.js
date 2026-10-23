@@ -65,6 +65,8 @@ const submitQuiz = async (studentId, payload) => {
     score,
     percent,
     createdAt: submission.createdAt,
+    // answers are revealed only after the student has submitted
+    correctAnswers: quiz.map((q) => q.correctIndex),
   };
 };
 
@@ -73,9 +75,23 @@ const getMyQuizSubmissions = async (studentId, courseId = null) => {
   const filter = { student: studentId };
   if (courseId) filter.course = courseId;
 
-  return QuizSubmission.find(filter)
-    .populate("course", "title")
-    .sort({ createdAt: -1 });
+  const submissions = await QuizSubmission.find(filter)
+    .populate("course", "title syllabus")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // attach the answer key for each submitted lesson (course content itself no longer exposes it)
+  return submissions.map(({ course, ...sub }) => {
+    let correctAnswers = [];
+    for (const mod of course?.syllabus || []) {
+      const lesson = mod.lessons.find((l) => String(l._id) === String(sub.lessonId));
+      if (lesson) {
+        correctAnswers = (lesson.quiz || []).map((q) => q.correctIndex);
+        break;
+      }
+    }
+    return { ...sub, course: course && { _id: course._id, title: course.title }, correctAnswers };
+  });
 };
 
 // Get quiz statistics for a course

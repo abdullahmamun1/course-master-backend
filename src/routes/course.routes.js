@@ -2,8 +2,10 @@
 
 const router = require("express").Router();
 const courseController = require("../controllers/course.controller");
+const optionalAuthMiddleware = require("../middlewares/optionalAuthMiddleware");
 
-router.get("/", courseController.getCourses);
-router.get("/:id", courseController.getCourseById);
+// optional auth: admins get quiz answers, everyone else gets them stripped
+router.get("/", optionalAuthMiddleware, courseController.getCourses);
+router.get("/:id", optionalAuthMiddleware, courseController.getCourseById);
 
 module.exports = router;
